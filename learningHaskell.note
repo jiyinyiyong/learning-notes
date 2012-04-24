@@ -111,7 +111,8 @@ http://www.haskell.org/ghc/docs/7.0.4/html/users_guide/index.html
 列表解析的写法, 右边是条件, 也可以写多个条件的
   [x | x <- [1..10], odd x] -- [1, 3, 5, 7, 9]
 `odd x`返回值是`True`的时候, 表示满足条件
-  [x*y | x <- [2,5,10], y <- [8,10,11]] -- [16,20,22,40,50,55,80,100,110]
+  [x*y | x <- [2,5,10], y <- [8,10,11]]
+返回 `[16,20,22,40,50,55,80,100,110]`
   boomBangs xs = [ if x < 10 then "BOOM!" else "BANG!" | x <- xs, odd x]
   boomBangs [7..13] -- ["BOOM!","BOOM!","BANG!","BANG!"]
 注意结合的顺序, 并且列表解析支持稍微复杂的表达式
@@ -121,89 +122,141 @@ http://www.haskell.org/ghc/docs/7.0.4/html/users_guide/index.html
   [[x | x <- xs, even x] | xs <- [[2,3],[2,3]]] -- [[2],[2]]
 列表解析可以被写得很长, 可能还需要换行, 可以很复杂
 后面会说到其实列表解析的功能可用函数替代
-  [(1, 2), (2, 3)] -- 用列表内嵌元组限制列表内的元素格式相同, 否则报错
-fst , snd 函数, 仅仅支持 pair, 但元组可以有不同数据类型
-zip [1,2,3,4,5] [5,5,5,5,5] -- 按照数量少的个数 --> [(1,5),(2,5),(3,5),(4,5),(5,5)]
-[ (a,b,c) | c <- [1..10], b <- [1..c], a <- [1..b], a^2 + b^2 == c^2, a+b+c == 24] -- 强大 --> [(6, 8, 10)]
-[a + b | (a, b) <- xs] -- 对于元组实用 List Comprehension
-static type system 编译前差错, type inference 不用每次声明
-:t 'a' -> 'a' :: Char -- ":t #{char}"用来察看类型, 这是字符串
-:t "a" -> "a" :: [Char] -- 字符串和字符串数组的区别
-removeNonUppercase :: [Char] -> [Char] -- 定义类型
-removeNonUppercase st = [ c | c <- st, c `elem` ['A'..'Z']] -- 定义函数, 可以自动推断
-addThree :: Int -> Int -> Int -> Int -- 经常就,, 最后一个 Int 是返回值
-addThree x y z = x + y + z -- 提到如果不懂, 先写函数, 用":t"查看
+用列表内嵌元组限制列表内的元素格式相同, 否则报错
+  zip [1,2,3,4,5] [5,5,5,5,5] -- [(1,5),(2,5),(3,5),(4,5),(5,5)]
+  [(a,b,c)| c<-[1..10], b<-[1..c], a<-[1..b], a^2+b^2 ==c^2, a+b+c ==24]
+返回 `[(6, 8, 10)]`
+  [a + b | (a, b) <- xs]
+列表解析对于元组也是实用的,
+  Prelude> :t ('d', 1)
+  ('d', 1) :: Num t => (Char, t)
+元组这个数据类型允许不同的元素, 但因此有各自特定的类型
+  fst (1 2) -- 1
+  snd (1 2) -- 2
+当元组长度为`2`时, 有两个函数可以取出元素
 
-Int -2147483648 ~ 2147483647
-Interger not bounded 无界的
-Float is a real floating point with single precision,
-Double is a real floating point with double the precision!
-Bool is a boolean type. It can have only two values: True and False
-Char represents a character. It's denoted by single quotes. A list of characters is a string
-( ) 是类型, 元组和列表的类型只能看了
-fst :: (a, b) -> a -- a 和 b 称为: type variable, 函数称为 polymorphic functions
-(+) 是 infix function ,可以通过"(+) 1 2"调用"--> 3"
-(==) :: (Eq a) => a -> a -> Bool  -- "=>" 表示: "class constraint"
-意思是, 参数满足类型约束,  a 属于 Eq 这个类, 只有 Eq 这个类里数相互可以比较
-All standard Haskell types except for IO and functions are a part of the Eq typeclass
-Eq is used for types that support equality testing. == and /=
-Ord is for types that have an ordering. >, <, >= and <=
-All the types we covered so far except for functions are part of Ord
-compare :: (Ord a) => a -> a -> Ordering , Ordering is a type that can be GT, LT or EQ
-show :: (Show a) => a -> String , Members of Show can be presented as strings
-All types covered so far except for functions are a part of Show
-read "[1,2,3,4]" ++ [3] -- Read is sort of the opposite typeclass of Show. --> [1, 2, 3, 4]
-read :: (Read a) => String -> a , read 要求是字符串, 单引号 Char 不行
-read "[1,2,3,4]" :: [Int] -- read 用法 --> [1, 2, 3, 4]
-Enum members are sequentially ordered types — they can be enumerated
-['a'.. 'z'] -- 按照说明给出的都是该类表达式生成的, 可是":t"查看却不像前面几个类型的显示
-minBound :: (Bounded a) => a -- 看不懂这句: In a sense they are polymorphic constants
-minBound :: Int -- 看去是最大最小边界两个函数, 元组中类似, 列表不接受 --> -2147483648
-20 :: (Num t) => t , 这个地方还是看不懂的
-Num is a numeric typeclass. Its members have the property of being able to act like numbers
-20 :: Float  20.0 -- It appears that whole numbers are also polymorphic constants
-(*) :: (Num a) => a -> a -> a , (*) accepts all numbers, 与数值相似, (疑问)
-Integral is also a numeric typeclass. In this typeclass are Int and Integer
-Floating includes only floating point numbers, so Float and Double
-fromIntegral (length [1,2,3,4]) + 3.2 -- 还有这个(怀疑): (Num b) => length :: [a] -> b
-Haskell 定义函数可以用 let , 指定类型只能在文件中进行, 至少 let 用上去报错
-注意定义 7 和定义 x 不可以调换顺序, 会发生覆盖, 似乎下往上读的, 匹配又是上往下的,
-lucky :: (Integral a) => a -> String
-lucky 7 = "LUCKY NUMBER SEVEN!"
-lucky x = "Sorry, you're out of luck, pal!"
-函数调用时会去匹配写好的模式, 注意尽可能将需要的模式涵盖以免出错
-factorial :: (Integral a) => a -> a  factorial 0 = 1
-factorial n = n * factorial (n - 1)
-注意用法, 操作元组可以直接用变量, 也可以像下面这样:
-addVectors :: (Num a) => (a, a) -> (a, a) -> (a, a)
-addVectors (x1, y1) (x2, y2) = (x1 + x2, y1 + y2)
-可以自己定义超过二维的数组取头部, 注意下划线的用法, 忽略类型的区别:
-first :: (a, b, c) -> a
-first (x, _, _) = x
-因为 [1, 2, 3] 实际上是 1:2:3:[] 的语法糖, 有下面写法, 另外注意 error 用法
-head' :: [a] -> a
-head' [] = error "Can't call head on an empty list, dummy!"
-head' (x:_) = x
-下面的用法更有趣, 不过类型 Show 很让我费解, 函数以外都属于 Show
-tell :: (Show a) => [a] -> String
-tell [] = "The list is empty"
-tell (x:[]) = "The list has one element: " ++ show x
-tell (x:y:[]) = "The list has two elements: " ++ show x ++ " and " ++ show y
-tell (x:y:_) = "This list is long. The first two elements are: " ++ show x ++ " and " ++ show y
-于是还有了用递归方式求数组长度的, 个人没有感想
-length' :: (Num b) => [a] -> b
-length' [] = 0
-length' (_:xs) = 1 + length' xs
-形如 xs@(x:y:ys) 来限定 xs 的类型, 用法
-capital :: String -> String
-capital "" = "Empty string, whoops!"
-capital all@(x:xs) = "The first letter of " ++ all ++ " is " ++ [x]
-符号 ++ 用在连接列表, 不能用在 Patten Match 当中, 不合理
-重载运算符时先确定结合性(infixl|infixr|infix), 然后优先级:
-infixr 3  &&
-(&&)  :: Bool -> Bool -> Bool
-False && x   = False
-True  && x   = x
+  :t 'a' -> 'a' :: char
+  :t "a" -> "a" :: [Char]
+`:t 'a'`用来察看类型, 这是字符串
+注意字符和字符串的区别, 后者大概是数组
+  removeNonUppercase :: [Char] -> [Char]
+  removeNonUppercase st = [ c | c <- st, c `elem` ['A'..'Z']]
+定义函数, 静态类型编译前检测, 有类型推断因此不用每次声明类型
+不过类型推断对性能影响较大, 还是建议添加类型生声明
+  addThree :: Int -> Int -> Int -> Int
+  addThree x y z = x + y + z
+关于声明, 后面还会讲. 最后一个`Int`是返回的类型
+如果不确定怎样使用类型, 先`Prelude`写函数, 然后用`:t`查看推断的类型
+
+  "Int -2147483648 ~ 2147483647
+  Interger not bounded
+  Float is a real floating point with single precision,
+  Double is a real floating point with double the precision!"
+`Int`类型的范围, 而`Interger`则是无界的整数
+  "Bool is a boolean type. It can have only two values: True and False.
+  Char represents a character. It's denoted by single quotes.
+  A list of characters is a string"
+`Char`类型单引号. `String`就说了列表了
+`()` 也是类型, 和列表类似, 具体类型还要看所含元素的类型
+  Prelude> :t head
+  head :: [a] -> a
+这里的`a`不是具体的类型, 叫类型变量, 对应函数叫多态函数, 类似泛型(?)
+  Prelude> :t fst
+  fst :: (a, b) -> a
+类型变量也可以是不同的. 习惯上字母`a, b, c, d...`来表示
+  Prelude> :t (==)
+  (==) :: (Eq a) => a -> a -> Bool
+`=>`的意思是类型约束. 意思是, 参数满足类型约束,  a 属于 Eq 这个类
+只有 Eq 这个类里数相互可以比较, `IO`之外的类型都属于`Eq`类型
+`Eq`类型有两个函数`==`和`/=`
+  Prelude> :t (>)
+  (>) :: (Ord a) => a -> a -> Bool
+`Ord`类型用于比较, 有函数`>`, `<`, `>=`, `<=`
+函数不属于`Ord`类型. `compare`函数接受`Ord`返回`Ordring`类型
+  Prelude> :t compare
+  compare :: Ord a => a -> a -> Ordering
+`Ordering`类型包含`GT`, `LT`, `EQ`
+  Prelude> :t show
+  show :: (Show a) => a -> Strin
+`Show`类型才可以用字符串表示出来, 这点和动态语言不一样
+  Prelude> :t read
+  read :: (Read a) => String -> a
+  read "[1,2,3,4]" ++ [3] -- [1, 2, 3, 4]
+  read "[1,2,3,4]" :: [Int] -- [1, 2, 3, 4]
+`Read`相反, 读取字符串到相应类型
+  Prelude> read "4"
+  Ambiguous type variable `a0' in the constraint:
+    (Read a0) arising from a use of `read'
+  read "4" :: Int -- 4
+  read "4" :: Float -- 4.0
+解释器不能确定代码的歧义，有时需要手动提示类型
+  succ 'B' -- 'C'
+`Enum`类, 可以被求值. 有`succ`和`pred`两个函数可用, 可用列表生成(?)
+`Bounded`类表示边界. 是多态常量(?).
+  Prelude> :t (*)
+  (*) :: Num a => a -> a -> a
+`Num`类是所有表示数字的, 又是多态常量...
+`Integral`整数类. 包括`Int`和`Integer`
+`Floating`浮点数, 包括`Float`和`Double`
+  Prelude> :t fromIntegral
+  fromIntegral :: (Integral a, Num b) => a -> b
+  Prelude> :t (length [2, 3])
+  (length [2, 3]) :: Int
+  Prelude> :t 3
+  3 :: Num a => a
+  Prelude> fromIntegral (length [1,2,3,4]) + 3.3
+  7.3
+用该函数把`Int`转化到更普遍的`Num`类才能计算
+
+在`Prelude`中定义函数需要使用`let`, 而脚本中不需要
+  lucky :: Integral a => a -> String
+  lucky 7 = "lucky!"
+  lucky x = "sorry.."
+注意定义`7`和定义`x`不可以调换顺序, 代码将从上往下匹配
+保存为当前目录脚本, `Prelude> :l `加文件名载入函数
+  factorial :: Integral a => a -> a
+  factorial 0 = 1
+  factorial n = n * factorial (n - 1)
+`Prelude> :r`重新载入函数, 可以计算
+函数调用时会去匹配写好的模式, 注意尽可能将需要的模式涵盖, 否则会出错
+  addVectors :: Num a => (a, a) -> (a, a) -> (a, a)
+  addVectors a b = (fst a + fst b, snd a + snd b)
+  addVectors :: (Num a) => (a, a) -> (a, a) -> (a, a)
+  addVectors (x1, y1) (x2, y2) = (x1 + x2, y1 + y2)
+用操作元组的方法改写`addVectors`函数
+  first :: (a, b, c) -> a
+  first (x, _, _) = x
+  second :: (a, b, c) -> b
+  second (_, y, _) = y
+  third :: (a, b, c) -> c
+  third (_, _, z) = z
+这里的`_`表示不管具体是什么类型. 这里定义了操作`triple`的函数
+  1:2:3:[] -- [1, 2, 3]
+`x:y:z:zs`是列表真实的写法, 从这里可以看列表的模式匹配
+  head' :: [a] -> a
+  head' [] = error "Can't call head on an empty list, dummy!"
+  head' (x:_) = x
+自己定义一个`head`, 注意单引号是可以放在末尾的
+`error`可以抛出一个异常.
+  tell :: Show a => [a] -> String
+  tell [] = "empty"
+  tell (x:[]) = "one elem: " ++ show x
+  tell (x:y:[]) = "two elems: " ++ show x ++ "," ++ show y
+  tell (x:y:_) = "ok, have: " ++ show x ++ "," ++ show y
+兼顾了不同的列表长度的例子
+  length' :: (Num b) => [a] -> b
+  length' [] = 0
+  length' (_:xs) = 1 + length' xs
+用递归方式求数组长度. `_`因为不用区别其类型
+  capital :: String -> String
+  capital "" = "Empty string.."
+  capital str@(x:xs) = "head of " ++ str ++ " is " ++ [x]
+形如`xs@(x:y:ys)`以方便使用全体和部分的`xs`
+  infixr 3  &&
+  (&&)  :: Bool -> Bool -> Bool
+  False && x   = False
+  True  && x   = x
+重载运算符时先确定结合性`(infixl|infixr|infix)`, 然后优先级:
 
 称为 Guard 的选择语句, 相当 switch/case, 可以缩进或不缩进, 可以嵌套
 max' :: (Ord a) => a -> a -> a  max' a b
