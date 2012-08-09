@@ -1,0 +1,56 @@
+#!/usr/bin/coffee
+
+n = (str) -> (str.match /^\s*/)[0].length
+
+add_left = (str, x) ->
+  x /= 2
+  left = n str
+  [1..x].forEach ->
+    str = str[...left] + '(' + str[left..]
+  str
+add_right = (str, x) ->
+  x /= 2
+  [1..x].forEach -> str = str + ')'
+  str
+
+convert = (str) ->
+  lines = str.split '\n'
+  for item, index in lines
+    n9 = if lines[index-1]? then n lines[index-1] else 0
+    n0 = n lines[index]
+    n1 = if lines[index+1]? then n lines[index+1] else 0
+    if n1 > n0
+      lines[index] = add_left lines[index], (n1 - n0)
+    if n0 > n1
+      lines[index] = add_right lines[index], (n0 - n1)
+    unless n1 > n0
+      unless lines[index].trim().length is 0
+        unless lines[index].trimLeft()[0] is ';'
+          unless lines[index].trimLeft().indexOf(' ') is -1
+            lines[index] = add_left lines[index], 1
+            lines[index] = add_right lines[index], 1
+  lines.join '\n'
+
+fs = require 'fs'
+name = process.argv[2]
+nam = name[...-3]
+e = name[-3..]
+if e isnt '.sc' then throw new Error 'should be .sc file'
+namf = nam + '.scm'
+
+{exec} = require 'child_process'
+colors = require 'colors'
+
+do run = ->
+  file = fs.readFileSync name, 'utf8'
+  file = convert file
+  fs.writeFileSync namf, file, 'utf8'
+
+  console.log "runing #{namf}...".red
+  exec "guile #{namf}", (err, stdout, stderr) ->
+    if err? then throw err else
+      console.log '>>>'.blue, stdout
+      console.log '--------------'.blue
+      console.log stderr.red
+
+fs.watchFile name, interval: 1000, run
